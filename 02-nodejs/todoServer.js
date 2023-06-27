@@ -45,5 +45,93 @@ const bodyParser = require('body-parser');
 const app = express();
 
 app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
+
+var globalId=0;
+var todos = [];
+const PORT = 3000;
+
+app.get("/todos", (req, res) => {
+  var result = [];
+  for(let i=0;i<todos.length;i++){
+    result.push({
+      "title": todos[i].title,
+      "description": todos[i].description
+    });
+  }
+  return res.status(200).send(result);
+});
+
+app.get("/todos/:id",(req, res) => {
+  for(task of todos){
+    if(task.id == parseInt(req.params.id)){
+      var result = {
+        id: task.id,
+        title: task.title,
+        description: task.description
+      };
+      return res.status(200).json(result);
+    }
+  }
+  return res.status(404).send();
+});
+
+app.post("/todos", (req, res) => {
+  todos.push({
+    id: ++globalId, 
+    title: req.body.title, 
+    description: req.body.description
+  });
+  console.log(todos);
+  return res.status(201).json({
+    id:globalId
+  });
+});
+
+
+
+
+app.put("/todos/:id",(req, res) => {
+  var temp = [];
+  console.log(req.params.id);
+  console.log(req.body);
+  for(task of todos){
+    if(task.id == req.params.id)
+    continue;
+    temp.push(task);
+  }
+  if(temp.length == todos.length){
+    return res.status(404).json({});
+  }
+  todos = temp;
+  todos.push({
+    id: req.params.id,
+    title: req.body.title,
+    description: req.body.description
+  });
+  return res.status(200).json({});
+  
+});
+
+app.delete("/todos/:id", (req, res) => {
+  var temp = [];
+  for(task of todos){
+    if(task.id == req.params.id)
+    continue;
+    temp.push(task);
+  }
+  if(temp.length == todos.length){
+    return res.status(404).json({});
+  }
+  todos = temp;
+  return res.status(200).json({});
+});
+
+app.use((req, res) => {
+  return res.status(404).json({});
+});
+
+
+
 
 module.exports = app;
