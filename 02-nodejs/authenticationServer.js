@@ -29,9 +29,79 @@
   Testing the server - run `npm run test-authenticationServer` command in terminal
  */
 
+const e = require("express");
 const express = require("express")
 const PORT = 3000;
 const app = express();
 // write your logic here, DONT WRITE app.listen(3000) when you're running tests, the tests will automatically start the server
+
+app.use(express.json());
+var users = [];
+var globalId = 0;
+
+app.post("/signup", (req, res) => {
+
+  var user = {
+    email: req.body.email,
+    password: req.body.password,
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    id: ++globalId
+  };
+  for(user of users){
+    if(user.email === req.body.email){
+      console.log("Username already exists");
+      return res.status(400).send("Username already exists");
+    }
+  }
+  users.push(user);
+  return res.status(201).send("Signup successful");
+});
+
+
+
+app.post("/login", (req, res) => {
+  var email = req.body.email;
+  var password = req.body.password;
+  console.log(req.body);
+  for(user of users){
+    if(user.email == email && user.password == password){
+      return res.status(200).json({
+        email:email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      });
+    }
+  }
+  return res.status(401).send("Invalid credentials");
+});
+
+app.get("/data", (req, res) => {
+  
+  var email = req.headers.email;
+  var password = req.headers.password;
+
+  for(user of users){
+    if(user.email == email && user.password == password){
+      var result = [];
+      for(user of users){
+        result.push({
+          firstName: user.firstName,
+          lastName: user.lastName,
+          username: user.email,
+        });
+      }
+      return res.status(200).json({users: result});
+    }
+  }
+  return res.status(401).send("Unauthorized");
+
+});
+  
+
+
+app.use((req, res) => { 
+  res.status(404).send("Not found");
+});
 
 module.exports = app;
